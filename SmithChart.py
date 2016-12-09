@@ -267,8 +267,8 @@ class SmithChart():
         entry_type = {1: "Transmission Line in series:    ",
                       2: "Lumped component in series:     ",
                       3: "Lumped component in parallel:   ",
-                      4: "Stub terminated in a short:     ",
-                      5: "Stub terminated in an open:     "}
+                      4: "Stub terminated in a open:      ",
+                      5: "Stub terminated in an short:    "}
         if (button_id == 1):
             # Add transmission line towards generator
             try:
