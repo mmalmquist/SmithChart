@@ -317,11 +317,11 @@ class SmithChart():
                 print("Unable to interpret input for button_id: ", button_id)
                 return
             if (button_id == 4):  # open
-                z = z_c*((1+np.exp(1j*(bl + 2*np.pi))) /
-                         (1-np.exp(1j*(bl + 2*np.pi))))
+                z = z_c*((1+np.exp(-2j*(bl + np.pi))) /
+                         (1-np.exp(-2j*(bl + np.pi))))
             else:  # short
-                z = z_c*((1+np.exp(1j*(bl + np.pi))) /
-                         (1-np.exp(1j*(bl + np.pi))))
+                z = z_c*((1+np.exp(-2j*(bl + np.pi/2))) /
+                         (1-np.exp(-2j*(bl + np.pi/2))))
             print("Stub ", z, self.z_in)
             self.z_in = 1/(1/self.z_in + 1/z)
             history_msg = str(
