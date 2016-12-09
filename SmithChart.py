@@ -102,11 +102,22 @@ class SmithChart():
                                                 text="Enter Details:")
         self.entries_frame.pack(side="top")
         # Create abd add everything to the entry panel
-        # Transmission line part
+        self.add_tl_frame()
+        self.add_lumped_frame()
+        self.add_stub_frame()
+        self.add_system_prop()
+        self.add_clear_frame()
+        self.add_history_frame()
+        return
+
+    def add_tl_frame(self):
+        """
+        Transmission line part
+        """
         self.tl_frame = tkinter.Frame(master=self.entries_frame)
         self.tl_lab = self.add_label(self.tl_frame, "Add TL")
         self.apnd_tl_but = self.add_button(
-            self.tl_frame, "Append", lambda: self.step_button_event(1))
+            self.tl_frame, "Series", lambda: self.step_button_event(1))
         self.tl_imp_lab = self.add_label(
             self.tl_frame, "Impedance:", anchr="e")
         self.tl_electr_len_lab = self.add_label(
@@ -123,35 +134,68 @@ class SmithChart():
         self.tl_electr_len.grid(row=2, column=1, columnspan=7, sticky="WE",
                                 pady=3, padx=5)
         self.tl_frame.pack(side="top")
-        # Series part
-        self.ser_frame = tkinter.Frame(master=self.entries_frame)
-        self.ser_lab = self.add_label(self.ser_frame, "Add series")
-        self.ser_lab.grid(row=3, column=0, sticky="E", padx=5, pady=2)
-        self.ser_imp_lab = self.add_label(self.ser_frame,
-                                          "Impedance:", anchr="e")
-        self.ser_imp_lab.grid(row=4, column=0, sticky="E", padx=5, pady=2)
-        self.apnd_ser_but = self.add_button(self.ser_frame, "Append",
-                                            lambda: self.step_button_event(2))
-        self.apnd_ser_but.grid(row=3, column=1, sticky="E", padx=5, pady=2)
-        self.ser_imp = tkinter.Entry(self.ser_frame)
-        self.ser_imp.grid(row=4, column=1, columnspan=7, sticky="WE",
-                          pady=3, padx=5)
-        self.ser_frame.pack(side="top")
-        # Paralell part
-        self.para_frame = tkinter.Frame(master=self.entries_frame)
-        self.para_lab = self.add_label(self.para_frame, "Add paralell")
-        self.para_lab.grid(row=5, column=0, sticky="E", padx=5, pady=2)
-        self.para_imp_lab = self.add_label(self.para_frame,
+        return
+
+    def add_lumped_frame(self):
+        """
+        Lumped in series and parallel
+        """
+        self.lumped_frame = tkinter.Frame(master=self.entries_frame)
+        self.lumped_lab = self.add_label(self.lumped_frame, "Add Lumped")
+        self.lumped_lab.grid(row=0, column=0, sticky="E", padx=5, pady=2)
+        self.lumped_imp_lab = self.add_label(self.lumped_frame,
+                                             "Impedance:", anchr="e")
+        self.lumped_imp_lab.grid(row=1, column=0, sticky="E", padx=5, pady=2)
+        self.lumped_imp = tkinter.Entry(self.lumped_frame)
+        self.lumped_imp.grid(row=1, column=1, columnspan=7, sticky="WE",
+                             pady=3, padx=5)
+        self.lumped_but_frame = tkinter.Frame(master=self.lumped_frame)
+        self.lumped_ser_but = self.add_button(self.lumped_but_frame, "Series",
+                                              lambda: self.step_button_event(2))
+        self.lumped_ser_but.grid(row=0, column=0, sticky="E", padx=5, pady=2)
+        self.lumped_para_but = self.add_button(self.lumped_but_frame, "Parallel",
+                                               lambda: self.step_button_event(3))
+        self.lumped_para_but.grid(row=0, column=1, sticky="W", padx=5, pady=2)
+        self.lumped_but_frame.grid(row=0, column=1, columnspan=7, sticky="WE",
+                                   pady=3, padx=5)
+        self.lumped_frame.pack(side="top")
+        return
+
+    def add_stub_frame(self):
+        """
+        Stub open and short
+        """
+        self.stub_frame = tkinter.Frame(master=self.entries_frame)
+        self.stub_lab = self.add_label(self.stub_frame, "Add Stub")
+        self.stub_lab.grid(row=0, column=0, sticky="E", padx=5, pady=2)
+        self.stub_imp_lab = self.add_label(self.stub_frame,
                                            "Impedance:", anchr="e")
-        self.para_imp_lab.grid(row=6, column=0, sticky="E", padx=5, pady=2)
-        self.apnd_para_but = self.add_button(self.para_frame, "Append",
-                                             lambda: self.step_button_event(3))
-        self.apnd_para_but.grid(row=5, column=1, sticky="E", padx=5, pady=2)
-        self.para_imp = tkinter.Entry(self.para_frame)
-        self.para_imp.grid(row=6, column=1, columnspan=7, sticky="WE",
+        self.stub_imp_lab.grid(row=1, column=0, sticky="E", padx=5, pady=2)
+        self.stub_len_lab = self.add_label(self.stub_frame,
+                                           "Electrical length:", anchr="e")
+        self.stub_len_lab.grid(row=2, column=0, sticky="E", padx=5, pady=2)
+        self.stub_imp = tkinter.Entry(self.stub_frame)
+        self.stub_imp.grid(row=1, column=1, columnspan=7, sticky="WE",
                            pady=3, padx=5)
-        self.para_frame.pack(side="top")
-        # System properties
+        self.stub_len = tkinter.Entry(self.stub_frame)
+        self.stub_len.grid(row=2, column=1, columnspan=7, sticky="WE",
+                           pady=3, padx=5)
+        self.stub_but_frame = tkinter.Frame(master=self.stub_frame)
+        self.stub_open_but = self.add_button(self.stub_but_frame, "Open",
+                                             lambda: self.step_button_event(4))
+        self.stub_open_but.grid(row=0, column=0, sticky="W", padx=5, pady=2)
+        self.stub_short_but = self.add_button(self.stub_but_frame, "Short",
+                                              lambda: self.step_button_event(5))
+        self.stub_short_but.grid(row=0, column=1, sticky="W", padx=5, pady=2)
+        self.stub_but_frame.grid(row=0, column=1, columnspan=7, sticky="WE",
+                                 pady=3, padx=5)
+        self.stub_frame.pack(side="top")
+        return
+
+    def add_system_prop(self):
+        """
+        System properties
+        """
         self.sys_frame = tkinter.Frame(master=self.entries_frame)
         self.sys_imp_lab = self.add_label(
             self.sys_frame, "System Impedance:")
@@ -167,17 +211,38 @@ class SmithChart():
         self.sys_load.grid(row=1, column=1, columnspan=7, sticky="WE",
                            pady=3, padx=5)
         self.sys_frame.pack(side="top")
+        return
 
-        # The panel that controls modifying entries written to the chart
+    def add_clear_frame(self):
+        """
+        The panel that controls modifying entries written to the chart
+        """
         self.ctl_panel = tkinter.Frame(master=self.ctl_frame)
         self.ctl_panel.pack(side="top", before=self.entries_frame)
-        # Create and add everything to the panel
         self.ctl_clr_all = self.add_button(self.ctl_panel, "Clear All",
                                            lambda: self.ctl_button_event(1))
         self.ctl_clr_all.grid(row=0, column=0, sticky="E", padx=5, pady=2)
         self.ctl_clr_last = self.add_button(self.ctl_panel, "Clear Last",
                                             lambda: self.ctl_button_event(2))
         self.ctl_clr_last.grid(row=1, column=0, sticky="E", padx=5, pady=2)
+        return
+
+    def add_history_frame(self):
+        """
+        Previous entries
+        """
+        self.prev_entr_frame = tkinter.Frame(master=self.ctl_frame)
+        self.prev_entr = tkinter.Text(master=self.prev_entr_frame)
+        self.prev_scr = tkinter.Scrollbar(master=self.prev_entr_frame,
+                                          orient="vertical",
+                                          command=self.prev_entr.yview)
+        self.prev_entr.grid(row=0, column=0)
+        self.prev_scr.grid(row=0, column=1, rowspan=15,
+                           columnspan=1, sticky="ns")
+        self.prev_entr.config(yscrollcommand=self. prev_scr.set)
+        # font=('Fixe', 12, 'bold', 'italic')
+        self.prev_entr_frame.pack(side="top", after=self.entries_frame)
+        return
 
     def plot_z_in(self):
         """
@@ -198,6 +263,12 @@ class SmithChart():
         """
         z = 0
         bl = 0
+        history_msg = ""
+        entry_type = {1: "Transmission Line in series:    ",
+                      2: "Lumped component in series:     ",
+                      3: "Lumped component in parallel:   ",
+                      4: "Stub terminated in a short:     ",
+                      5: "Stub terminated in an open:     "}
         if (button_id == 1):
             # Add transmission line towards generator
             try:
@@ -209,38 +280,62 @@ class SmithChart():
                 return
             self.z_in = z*((self.z_in + 1j*z*np.tan(bl)) /
                            (z + 1j*self.z_in*np.tan(bl)))
+            history_msg = str(
+                entry_type[button_id]) + \
+                "Z_0 = " + str(z) + " ohm, bl = " + \
+                str(round(bl, 3)) + " radians"
             self.tl_electr_len.delete(0, len(self.tl_electr_len.get()))
-            self.tl_imp.delete(0, len(self.sys_imp.get()))
+            self.tl_imp.delete(0, len(self.tl_imp.get()))
             print(self.z_in)
-        elif (button_id == 2):
+        elif (button_id == 2 or button_id == 3):
             try:
                 self.z_0 = complex(self.sys_imp.get())
-                z = complex(self.ser_imp.get())
+                z = complex(self.lumped_imp.get())
             except:
                 print("Unable to interpret input for button_id: ", button_id)
                 return
             if (self.sys_load.get() == ""):
-                self.sys_load.insert(0, self.ser_imp.get())
+                self.sys_load.insert(0, self.lumped_imp.get())
                 self.sys_load.config(state="readonly")
-            self.z_in = self.z_in + z
-            self.ser_imp.delete(0, len(self.ser_imp.get()))
-        elif (button_id == 3):
+            if (button_id == 2):
+                self.z_in = self.z_in + z
+            else:
+                if np.abs(z) < 1e-40:
+                    self.z_in = z
+                else:
+                    self.z_in = self.z_in * z / (self.z_in + z)
+            history_msg = str(
+                entry_type[button_id]) + \
+                "Z = " + str(z) + " ohm"
+            self.lumped_imp.delete(0, len(self.lumped_imp.get()))
+        elif (button_id == 4 or button_id == 5):
             try:
                 self.z_0 = complex(self.sys_imp.get())
-                z = complex(self.para_imp.get())
+                z_c = complex(self.stub_imp.get())
+                bl = self.parse_raw_input(self.stub_len.get())
             except:
                 print("Unable to interpret input for button_id: ", button_id)
                 return
-            if np.abs(z) < 1e-40:
-                self.z_in = z
-            else:
-                self.z_in = self.z_in * z / (self.z_in + z)
-            self.para_imp.delete(0, len(self.para_imp.get()))
+            if (button_id == 4):  # open
+                z = z_c*((1+np.exp(1j*(bl + 2*np.pi))) /
+                         (1-np.exp(1j*(bl + 2*np.pi))))
+            else:  # short
+                z = z_c*((1+np.exp(1j*(bl + np.pi))) /
+                         (1-np.exp(1j*(bl + np.pi))))
+            print("Stub ", z, self.z_in)
+            self.z_in = 1/(1/self.z_in + 1/z)
+            history_msg = str(
+                entry_type[button_id]) + \
+                "Z_0 = " + str(z) + " ohm, bl = " + \
+                str(round(bl, 3)) + " radians"
+            self.stub_len.delete(0, len(self.stub_len.get()))
+            self.stub_imp.delete(0, len(self.stub_imp.get()))
         else:
             print("Unknown entries_frame button id: ", button_id)
             return
         print(button_id, self.z_0, z, bl, self.z_in)
         self.z_hist.append(self.z_in)
+        self.prev_entr.insert('end', history_msg+"\n")
         self.plot_z_in()
         return
 
@@ -256,13 +351,14 @@ class SmithChart():
                 # delete latest entry
                 self.plots_list.remove(
                     self.plots_list[np.size(self.plots_list) - 1])
-                
+                """
                 self.sys_load.config(state="normal")
                 self.sys_load.delete(0, len(self.sys_load.get()))
-                self.tl_imp.delete(0, len(self.tl_imp))
-                self.tl_electr_len.delete(0, len(self.tl_electr_len))
-                self.ser_imp.delete((0, len(self.ser_imp)))
-                self.para_imp.delete(0, len(self.para_imp))
+                self.tl_imp.delete(0, len(self.tl_imp.get()))
+                self.tl_electr_len.delete(0, len(self.tl_electr_len.get()))
+                self.lumped_imp.delete((0, len(self.lumped_imp.get())))
+                self.stub_imp.delete(0, len(self.stub_imp.get()))
+                """
             self.canvas.draw()
         elif (button_id == 2):
             self.ax.lines.pop()  # deleted the latest plot
@@ -496,20 +592,20 @@ def create_detail_frame():
     rows += 1
 
     # Reposition text, scroll
-    #scr.grid_forget()
-    #tex.grid_forget()
-    #scr.grid(row=rows, padx=1, column=7, rowspan=15, columnspan=1, sticky=NS)
-    #tex.grid(row=rows,column=1)
+    #self.prev_scr.grid_forget()
+    #self.prev_entr.grid_forget()
+    #self.prev_scr.grid(row=rows, padx=1, column=7, rowspan=15, columnspan=1, sticky=NS)
+    #self.prev_entr.grid(row=rows,column=1)
 
     # Reposition text, scroll
-    scr.grid(row=rows)
-    tex.grid(row=rows)
+    self.prev_scr.grid(row=rows)
+    self.prev_entr.grid(row=rows)
 
-tex = Text(master=root)
-scr=Scrollbar(root,orient =VERTICAL,command=tex.yview)
-scr.grid(row=1, padx=1, column=7, rowspan=15, columnspan=1, sticky=NS)
-tex.grid(row=1,column=1)
-tex.config(yscrollcommand=scr.set,font=('Arial', 8, 'bold', 'italic'))
+self.prev_entr = Text(master=root)
+self.prev_scr=Scrollbar(root,orient =VERTICAL,command=self.prev_entr.yview)
+self.prev_scr.grid(row=1, padx=1, column=7, rowspan=15, columnspan=1, sticky=NS)
+self.prev_entr.grid(row=1,column=1)
+self.prev_entr.config(yscrollcommand=self.prev_scr.set,font=('Arial', 8, 'bold', 'italic'))
 
 Button(root, text='Add detail frame', command=create_detail_frame).grid(row=0, column=7)
 create_detail_frame()
