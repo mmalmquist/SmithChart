@@ -2,7 +2,6 @@
 import sys
 import tkinter
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.figure as mplfig
 import matplotlib.backends.backend_tkagg as tkagg
 pi = np.pi
@@ -39,14 +38,19 @@ class SmithChart():
         self.frame = tkinter.Tk()  # Create the frame
         self.frame.title('Smith Chart')
 
+        # TODO: Make this resizable
         self.smith_panel = tkinter.Frame(master=self.frame, bg='#00ff00')
         self.smith_panel.pack(side='top')
         # Smith chart
-        self.fig = mplfig.Figure()  # figure containint the smith plot
-        self.ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8], frameon=True,
+        # figure containint the smith plot
+        self.fig = mplfig.Figure(facecolor="#f8fbfc", frameon=True,
+                                 figsize=(7, 7))
+        self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.9], frame_on=False,
                                     navigate=True, axisbg="#f8fbfc",
                                     aspect=1)
-        self.ax.axis([-1, 1, -1, 1])
+        self.ax.axis([-1, 1, -1, 1])  # Not really needed
+        self.ax.get_yaxis().set_visible(False)
+        self.ax.get_xaxis().set_visible(False)
         self.canvas = tkagg.FigureCanvasTkAgg(self.fig,
                                               master=self.smith_panel)
         self.ax.grid(False)
@@ -66,8 +70,8 @@ class SmithChart():
 
     def add_top_frame(self):
         """
-        Creates and places a panel with buttons and labels at the top
-        of the man frame.
+        Creates and places a panel with buttons and labels at the top of the
+        man frame.
         """
         # The frame with the buttons
         self.frame1 = tkinter.Frame(master=self.frame, bg='#00ff00',
@@ -90,8 +94,8 @@ class SmithChart():
 
     def add_smith_ctl_frame(self):
         """
-        Creates and places the smith chart control panel on the right
-        side of the main frame.
+        Creates and places the smith chart control panel on the right side of
+        the main frame.
         """
         # The control panel itself
         self.ctl_frame = tkinter.Frame(master=self.smith_panel)
@@ -100,7 +104,7 @@ class SmithChart():
         # The panel where new entries are read from
         self.entries_frame = tkinter.LabelFrame(self.ctl_frame,
                                                 text="Enter Details:")
-        self.entries_frame.pack(side="top")
+        self.entries_frame.grid(row=1, column=0, padx=0, pady=0, sticky="W")
         # Create abd add everything to the entry panel
         self.add_tl_frame()
         self.add_lumped_frame()
@@ -115,6 +119,7 @@ class SmithChart():
         Transmission line part
         """
         self.tl_frame = tkinter.Frame(master=self.entries_frame)
+        self.tl_frame.grid(row=0, column=0, padx=0, pady=0, sticky="W")
         self.tl_lab = self.add_label(self.tl_frame, "Add TL")
         self.apnd_tl_but = self.add_button(
             self.tl_frame, "Series", lambda: self.step_button_event(1))
@@ -133,7 +138,6 @@ class SmithChart():
                                     padx=5, pady=2)
         self.tl_electr_len.grid(row=2, column=1, columnspan=7, sticky="WE",
                                 pady=3, padx=5)
-        self.tl_frame.pack(side="top")
         return
 
     def add_lumped_frame(self):
@@ -141,6 +145,7 @@ class SmithChart():
         Lumped in series and parallel
         """
         self.lumped_frame = tkinter.Frame(master=self.entries_frame)
+        self.lumped_frame.grid(row=1, column=0, padx=0, pady=0, sticky="W")
         self.lumped_lab = self.add_label(self.lumped_frame, "Add Lumped")
         self.lumped_lab.grid(row=0, column=0, sticky="E", padx=5, pady=2)
         self.lumped_imp_lab = self.add_label(self.lumped_frame,
@@ -150,15 +155,16 @@ class SmithChart():
         self.lumped_imp.grid(row=1, column=1, columnspan=7, sticky="WE",
                              pady=3, padx=5)
         self.lumped_but_frame = tkinter.Frame(master=self.lumped_frame)
-        self.lumped_ser_but = self.add_button(self.lumped_but_frame, "Series",
-                                              lambda: self.step_button_event(2))
+        self.lumped_ser_but = self.add_button(
+            self.lumped_but_frame, "Series",
+            lambda: self.step_button_event(2))
         self.lumped_ser_but.grid(row=0, column=0, sticky="E", padx=5, pady=2)
-        self.lumped_para_but = self.add_button(self.lumped_but_frame, "Parallel",
-                                               lambda: self.step_button_event(3))
+        self.lumped_para_but = self.add_button(
+            self.lumped_but_frame, "Parallel",
+            lambda: self.step_button_event(3))
         self.lumped_para_but.grid(row=0, column=1, sticky="W", padx=5, pady=2)
         self.lumped_but_frame.grid(row=0, column=1, columnspan=7, sticky="WE",
                                    pady=3, padx=5)
-        self.lumped_frame.pack(side="top")
         return
 
     def add_stub_frame(self):
@@ -166,6 +172,7 @@ class SmithChart():
         Stub open and short
         """
         self.stub_frame = tkinter.Frame(master=self.entries_frame)
+        self.stub_frame.grid(row=2, column=0, padx=0, pady=0, sticky="W")
         self.stub_lab = self.add_label(self.stub_frame, "Add Stub")
         self.stub_lab.grid(row=0, column=0, sticky="E", padx=5, pady=2)
         self.stub_imp_lab = self.add_label(self.stub_frame,
@@ -181,15 +188,16 @@ class SmithChart():
         self.stub_len.grid(row=2, column=1, columnspan=7, sticky="WE",
                            pady=3, padx=5)
         self.stub_but_frame = tkinter.Frame(master=self.stub_frame)
-        self.stub_open_but = self.add_button(self.stub_but_frame, "Open",
-                                             lambda: self.step_button_event(4))
+        self.stub_open_but = self.add_button(
+            self.stub_but_frame, "Open",
+            lambda: self.step_button_event(4))
         self.stub_open_but.grid(row=0, column=0, sticky="W", padx=5, pady=2)
-        self.stub_short_but = self.add_button(self.stub_but_frame, "Short",
-                                              lambda: self.step_button_event(5))
+        self.stub_short_but = self.add_button(
+            self.stub_but_frame, "Short",
+            lambda: self.step_button_event(5))
         self.stub_short_but.grid(row=0, column=1, sticky="W", padx=5, pady=2)
         self.stub_but_frame.grid(row=0, column=1, columnspan=7, sticky="WE",
                                  pady=3, padx=5)
-        self.stub_frame.pack(side="top")
         return
 
     def add_system_prop(self):
@@ -197,6 +205,7 @@ class SmithChart():
         System properties
         """
         self.sys_frame = tkinter.Frame(master=self.entries_frame)
+        self.sys_frame.grid(row=3, column=0, padx=0, pady=0, sticky="W")
         self.sys_imp_lab = self.add_label(
             self.sys_frame, "System Impedance:")
         self.sys_load_lab = self.add_label(
@@ -210,7 +219,6 @@ class SmithChart():
                           pady=3, padx=5)
         self.sys_load.grid(row=1, column=1, columnspan=7, sticky="WE",
                            pady=3, padx=5)
-        self.sys_frame.pack(side="top")
         return
 
     def add_clear_frame(self):
@@ -218,7 +226,7 @@ class SmithChart():
         The panel that controls modifying entries written to the chart
         """
         self.ctl_panel = tkinter.Frame(master=self.ctl_frame)
-        self.ctl_panel.pack(side="top", before=self.entries_frame)
+        self.ctl_panel.grid(row=0, column=0, padx=0, pady=0, sticky="W")
         self.ctl_clr_all = self.add_button(self.ctl_panel, "Clear All",
                                            lambda: self.ctl_button_event(1))
         self.ctl_clr_all.grid(row=0, column=0, sticky="E", padx=5, pady=2)
@@ -232,16 +240,17 @@ class SmithChart():
         Previous entries
         """
         self.prev_entr_frame = tkinter.Frame(master=self.ctl_frame)
-        self.prev_entr = tkinter.Text(master=self.prev_entr_frame)
+        self.prev_entr_frame.grid(row=2, column=0, padx=0, pady=0, sticky="W")
+        self.prev_entr = tkinter.Text(master=self.prev_entr_frame, wrap='word',
+                                      height=12, width=60)
         self.prev_scr = tkinter.Scrollbar(master=self.prev_entr_frame,
                                           orient="vertical",
                                           command=self.prev_entr.yview)
         self.prev_entr.grid(row=0, column=0)
-        self.prev_scr.grid(row=0, column=1, rowspan=15,
+        self.prev_scr.grid(row=0, column=1, rowspan=10,
                            columnspan=1, sticky="ns")
         self.prev_entr.config(yscrollcommand=self. prev_scr.set)
         # font=('Fixe', 12, 'bold', 'italic')
-        self.prev_entr_frame.pack(side="top", after=self.entries_frame)
         return
 
     def plot_z_in(self):
@@ -342,6 +351,10 @@ class SmithChart():
     def ctl_button_event(self, button_id):
         """
         Handles events when buttons are pressed in the control frame
+        """
+        """ Get previous input and separate by newline
+        histry = self.prev_entr.get(1.0, 'end').split("\n")
+        print(histry[:len(histry)-2])  # 2 empty lines for some reason
         """
         if (button_id == 1):
             # Clears the smith chart from any input
