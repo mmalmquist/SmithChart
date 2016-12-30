@@ -36,10 +36,10 @@ class SmithChart():
         self.z_in = 0  # ?
         self.z_0 = 50  # characteristic impedance
         self.frame = tkinter.Tk()  # Create the frame
-        self.frame.title('Smith Chart')
+        self.frame.title("Smith Chart")
 
         # TODO: Make this resizable
-        self.smith_panel = tkinter.Frame(master=self.frame, bg='#00ff00')
+        self.smith_panel = tkinter.Frame(master=self.frame, bg="#00ff00")
         self.smith_panel.pack(side='top')
         # Smith chart
         # figure containint the smith plot
@@ -54,13 +54,13 @@ class SmithChart():
         self.canvas = tkagg.FigureCanvasTkAgg(self.fig,
                                               master=self.smith_panel)
         self.ax.grid(False)
-        self.canvas.get_tk_widget().pack(side='left')
+        self.canvas.get_tk_widget().pack(side="left")
 
         # Smith control
         self.add_smith_ctl_frame()
 
         # Top frame
-        self.add_top_frame()
+        # self.add_top_frame()
         # Draw smith chart
         self.calc_smith_chart()
         self.draw_smith_chart()
@@ -104,14 +104,31 @@ class SmithChart():
         # The panel where new entries are read from
         self.entries_frame = tkinter.LabelFrame(self.ctl_frame,
                                                 text="Enter Details:")
-        self.entries_frame.grid(row=1, column=0, padx=0, pady=0, sticky="W")
-        # Create abd add everything to the entry panel
+        self.entries_frame.grid(row=2, column=0, padx=0, pady=0)
+        # Create and add everything to the entry panel
         self.add_tl_frame()
+        self.add_z_in_frame()
         self.add_lumped_frame()
         self.add_stub_frame()
         self.add_system_prop()
         self.add_clear_frame()
         self.add_history_frame()
+        return
+
+    def add_z_in_frame(self):
+        """
+        Displaying current z_in.
+        """
+        self.z_in_frame = tkinter.Frame(master=self.ctl_frame)
+        self.z_in_frame.grid(row=1, column=0, padx=0, pady=0)
+        self.z_in_lab = tkinter.Label(master=self.z_in_frame, anchor="e",
+                                      font=("Times", 12),
+                                      justify="center", padx=0, pady=0,
+                                      text="Z_in:")
+        self.z_in_entr = tkinter.Entry(master=self.z_in_frame,
+                                       state="disabled")
+        self.z_in_lab.grid(row=0, column=0, padx=0, pady=0, sticky="E")
+        self.z_in_entr.grid(row=0, column=1, padx=0, pady=0, sticky="W")
         return
 
     def add_tl_frame(self):
@@ -240,7 +257,7 @@ class SmithChart():
         Previous entries
         """
         self.prev_entr_frame = tkinter.Frame(master=self.ctl_frame)
-        self.prev_entr_frame.grid(row=2, column=0, padx=0, pady=0, sticky="W")
+        self.prev_entr_frame.grid(row=3, column=0, padx=0, pady=0, sticky="W")
         self.prev_entr = tkinter.Text(master=self.prev_entr_frame, wrap='word',
                                       height=12, width=60)
         self.prev_scr = tkinter.Scrollbar(master=self.prev_entr_frame,
@@ -344,7 +361,11 @@ class SmithChart():
             return
         print(button_id, self.z_0, z, bl, self.z_in)
         self.z_hist.append(self.z_in)
-        self.prev_entr.insert('end', history_msg+"\n")
+        self.z_in_entr.config(state="normal")
+        self.z_in_entr.delete(0, "end")
+        self.z_in_entr.insert(0, str(self.z_in)+" ohm")
+        self.z_in_entr.config(state="readonly")
+        self.prev_entr.insert("end", history_msg+"\n")
         self.plot_z_in()
         return
 
@@ -372,17 +393,35 @@ class SmithChart():
                 self.lumped_imp.delete((0, len(self.lumped_imp.get())))
                 self.stub_imp.delete(0, len(self.stub_imp.get()))
                 """
+            self.prev_entr.delete(1.0, "end")
             self.canvas.draw()
         elif (button_id == 2):
             self.ax.lines.pop()  # deleted the latest plot
             # delete latest entry
             self.plots_list.remove(
                 self.plots_list[np.size(self.plots_list) - 1])
+            print(self.prev_entr.get(1.0, "end"))
+            entrs1 = self.prev_entr.get(1.0, "end")
+            entrs = self.prev_entr.get(1.0, "end").split("\n")
+            """
+            TODO: complete this.
+            i'm trying to delete theta last entry in the history frame.
+            """
+            print("len: ", len(entrs[len(entrs)-3]))
+            print(entrs[len(entrs)-3], "A")
+            print(entrs1[len(entrs1)-len(entrs[len(entrs)-3])-2:len(entrs1)-2], "A")
+            # print(self.prev_entr.get(float(len(entrs1)-len(entrs[len(entrs)-3])-2), float(len(entrs1)-2)), "A")
+            """
+            print(len(entrs))
+            print(entrs)
+            for i in range(0, len(entrs)):
+                print("\n"+str(i)+": ", entrs[i])
+            """
             self.canvas.draw()
         else:
             print("Unknown ctl button id: ", button_id)
 
-    def add_label(self, parent_frame, label_text, anchr="center"):
+    def add_label(self, parent_frame, label_text, anchr="w"):
         """
         A method to simplify the creation of lables
         """
@@ -390,7 +429,7 @@ class SmithChart():
                                   bg='#777874', bitmap='', image='',
                                   bd=2, cursor='arrow',
                                   font=("Times", 12),
-                                  fg='#f8fbfc', height=1, width=15,
+                                  fg='#f8fbfc', height=1, width=16,
                                   justify='center', padx=0, pady=0,
                                   relief='flat', text=label_text,
                                   textvariable='',
@@ -405,7 +444,7 @@ class SmithChart():
                                     bg='#272824', bitmap='', image='',
                                     bd=2, cursor='arrow',
                                     font=("Times", 12),
-                                    fg='#f8fbfc', height=1, width=15,
+                                    fg='#f8fbfc', height=1, width=16,
                                     justify='center', padx=0, pady=0,
                                     relief='flat', text=button_text,
                                     textvariable='',
