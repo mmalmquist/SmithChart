@@ -225,7 +225,6 @@ class SmithChart(object):
             elif (button_id == 2 or button_id == 3):
                 self._z_0 = complex(self.sys_imp.get())
                 z = complex(self.lumped_imp.get())
-                
                 if (self.sys_load.get() == ""):
                     self.sys_load.insert(0, self.lumped_imp.get())
                     self.sys_load.config(state="readonly")
@@ -247,7 +246,7 @@ class SmithChart(object):
                     z = z_c*((1+exp(-2j*(bl + pi))) / (1-exp(-2j*(bl + pi))))
                 else:  # short
                     z = z_c*((1+exp(-2j*(bl + pi/2))) / (1-exp(-2j*(bl + pi/2))))
-                self._z_in = 1/(1/self._z_in + 1/z)
+                self._z_in = self._z_in*z/(self._z_in + z)
                 history_msg = "%s Z_0 = %s ohm, bl = %s radians" % (entry_type[button_id], complx_str(z), str(round(bl, 3)))
                 self.stub_len.delete("0", len(self.stub_len.get()))
                 self.stub_imp.delete("0", len(self.stub_imp.get()))
@@ -290,6 +289,9 @@ class SmithChart(object):
             # Clears the smith chart from any input
             for _ in range(size(self._plots_list)-self._smith_plots):
                 self._remove_last_entry(redraw=False)
+            self._z_in = 0
+            self.sys_load.config(state="normal")
+            self.sys_load.delete("0", "end")
             self.canvas.draw()
         elif (button_id == 2):
             self._remove_last_entry()
