@@ -4,119 +4,255 @@
 
 #include <iostream>
 #include <string>
+#include <complex>
+#include <sstream>
 
-#define C_CB_WRAPPER(CPP_CB) c_##CPP_CB
-#define DECLARE_C_CALLBACK_WRAPPER(CPP_CALLBACK_FUNCTION)		\
-  static gboolean							\
-  C_CB_WRAPPER(CPP_CALLBACK_FUNCTION)(GtkWidget *widget,		\
-			    GdkEventMotion *event,			\
-			    gpointer data)				\
-  {									\
-    (void)widget; (void)event;						\
-    return ((SmithChartControl *)data)->CPP_CALLBACK_FUNCTION();	\
+#include "c_wrapper_macros.hpp"
+
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, clear_all_btn_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, clear_last_btn_cb)
+
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_tl_series_btn_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_lumped_series_btn_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_lumped_parallel_btn_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_open_btn_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_short_btn_cb)
+
+static std::complex<double>
+parse_complex(std::string const &str)
+{
+  std::complex<double> c;
+  std::istringstream('(' + str + ')') >> c;
+  return c;
+}
+
+static double
+parse_double(std::string const &str)
+{
+  double d;
+  std::istringstream(str) >> d;
+  return d;
+}
+
+static double
+parse_double_expr(std::string const &str)
+{
+  size_t i_mul = str.find("*");
+  size_t i_pi = str.find("pi");
+  size_t i_div = str.find("/");
+  if (i_mul == std::string::npos && i_pi == std::string::npos && i_div == std::string::npos) {
+    double d;
+    std::istringstream(str) >> d;
+    return d;
+  } else {
+    double val1 = 1.0;
+    double val2 = i_pi != std::string::npos ? M_PI : 1.0;
+    double val3 = 1.0;
+    if (i_pi != std::string::npos) {
+      if (i_mul != std::string::npos) {
+	std::istringstream(str.substr(0, i_mul)) >> val1;
+      }
+      if (i_div != std::string::npos) {
+	std::istringstream(str.substr(i_div+1, std::string::npos)) >> val3;
+      }
+    } else {
+      if (i_mul != std::string::npos) {
+	std::istringstream(str.substr(0, i_mul)) >> val1;
+	std::istringstream(str.substr(i_mul+1, std::string::npos)) >> val3;
+      }
+      if (i_div != std::string::npos) {
+	std::istringstream(str.substr(0, i_div)) >> val1;
+	std::istringstream(str.substr(i_div+1, std::string::npos)) >> val3;
+      }
+    }
+    return val1 * val2 / val3;
   }
+}
 
-DECLARE_C_CALLBACK_WRAPPER(clear_all_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(clear_last_btn_cb)
+static std::string
+complex_to_str(std::complex<double> const &c)
+{
+  double real = c.real();
+  double imag = c.imag();
+  std::ostringstream os;
+  if (std::abs(real) > 0 && std::abs(imag) > 0) {
+    os << real;
+    os << (imag < 0 ? " - j" : " + j");
+    os << std::abs(imag);
+  } else if (std::abs(real) > 0) {
+    os << real;
+  } else if (std::abs(imag) > 0) {
+    os << (imag < 0 ? "-j" : "j");
+    os << std::abs(imag);
+  } else {
+    os << "0";
+  }
+  return os.str();
+}
 
-DECLARE_C_CALLBACK_WRAPPER(add_tl_series_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(add_lumped_series_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(add_lumped_parallel_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(add_stub_open_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(add_stub_short_btn_cb)
+void
+SmithChartControl::finalize_add_component(std::string hist_entry)
+{
+  append_history(hist_entry);
+  std::complex<double> const *z_load = m_scm->get_load_impedance();
+  if (z_load) {
+    gtk_entry_set_text(GTK_ENTRY(load_impedance_entry), complex_to_str(*z_load).c_str());
+  }
+  double const *z_system = m_scm->get_system_impedance();
+  if (z_system) {
+    gtk_entry_set_text(GTK_ENTRY(system_impedance_entry), complex_to_str(*z_system).c_str());
+  }
+  m_scv->add_reflection_coefficient(m_scm->calculate_reflection_coefficient());
+  m_scv->repaint();
+}
 
 gboolean
-SmithChartControl::clear_all_btn_cb()
+SmithChartControl::clear_all_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   clear_history();
+  m_scm->clear_history();
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(m_scm->get_z_in()).c_str());
+  m_scv->clear_history();
+  m_scv->repaint();
   
   return TRUE;
 }
 
 gboolean
-SmithChartControl::clear_last_btn_cb()
+SmithChartControl::clear_last_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   delete_last_history();
+  m_scm->delete_last_history();
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(m_scm->get_z_in()).c_str());
+  m_scv->delete_last_history();
+  m_scv->repaint();
   
   return TRUE;
 }
 
 gboolean
-SmithChartControl::add_tl_series_btn_cb()
+SmithChartControl::add_tl_series_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   GtkEntry *ie = GTK_ENTRY(transmission_line_impedance_entry);
   GtkEntry *ele = GTK_ENTRY(transmission_line_electrical_lengthentry);
   
-  gchar const *impedance = gtk_entry_get_text(ie);
-  gchar const *electrical_len = gtk_entry_get_text(ele);
+  double z, bl;
+  try {
+    z = parse_double(std::string(gtk_entry_get_text(ie)));
+    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+  } catch (...) {
+    std::cerr << "Error parsing transmission line properties" << std::endl;
+    return TRUE;
+  }
+  std::complex<double> z_in = m_scm->add_tl_series(z, bl);
 
-  // process entry content
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  append_history("add_tl_series_btn_cb");
+  finalize_add_component("Transmission Line in series: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
   
   return TRUE;
 }
 
 gboolean
-SmithChartControl::add_lumped_series_btn_cb()
+SmithChartControl::add_lumped_series_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   GtkEntry *ie = GTK_ENTRY(lumped_component_impedance_entry);
-
-  gchar const *impedance = gtk_entry_get_text(ie);
   
-  // process entry content
+  std::complex<double> c;
+  try {
+    c = parse_complex(std::string(gtk_entry_get_text(ie)));
+  } catch (...) {
+    std::cerr << "Error parsing lumped component properties" << std::endl;
+    return TRUE;
+  }
+  std::complex<double> z_in = m_scm->add_lumped_series(c);
+
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
-  append_history("add_lumped_series_btn_cb");
+  finalize_add_component("Lumped component in series: Z = " + complex_to_str(c) + " ohm");
+  
   return TRUE;
 }
 
 gboolean
-SmithChartControl::add_lumped_parallel_btn_cb()
+SmithChartControl::add_lumped_parallel_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   GtkEntry *ie = GTK_ENTRY(lumped_component_impedance_entry);
-  gchar const *impedance = gtk_entry_get_text(ie);
 
-  // process entry content
+  std::complex<double> c;
+  try {
+    c = parse_complex(std::string(gtk_entry_get_text(ie)));
+  } catch (...) {
+    std::cerr << "Error parsing lumped component properties" << std::endl;
+    return TRUE;
+  }
+  std::complex<double> z_in = m_scm->add_lumped_parallel(c);
+
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
-  append_history("add_lumped_parallel_btn_cb");
+  finalize_add_component("Lumped component in parallel: Z = " + complex_to_str(c) + " ohm");
+  
   return TRUE;
 }
 
 gboolean
-SmithChartControl::add_stub_open_btn_cb()
+SmithChartControl::add_stub_open_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   GtkEntry *ie = GTK_ENTRY(stub_impedance_entry);
   GtkEntry *ele = GTK_ENTRY(stub_electrical_length_entry);
   
-  gchar const *impedance = gtk_entry_get_text(ie);
-  gchar const *electrical_len = gtk_entry_get_text(ele);
-  
-  // process entry content
+  double z, bl;
+  try {
+    z = parse_double(std::string(gtk_entry_get_text(ie)));
+    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+  } catch (...) {
+    std::cerr << "Error parsing stub properties" << std::endl;
+    return TRUE;
+  }
+  std::complex<double> z_in = m_scm->add_stub_open(z, bl);
+
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  append_history("add_stub_open_btn_cb");
+  finalize_add_component("Stub terminated in a open: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
+  
   return TRUE;
 }
 
 gboolean
-SmithChartControl::add_stub_short_btn_cb()
+SmithChartControl::add_stub_short_btn_cb(GtkWidget *widget)
 {
+  (void)widget;
   GtkEntry *ie = GTK_ENTRY(stub_impedance_entry);
   GtkEntry *ele = GTK_ENTRY(stub_electrical_length_entry);
   
-  gchar const *impedance = gtk_entry_get_text(ie);
-  gchar const *electrical_len = gtk_entry_get_text(ele);
+  double z, bl;
+  try {
+    z = parse_double(std::string(gtk_entry_get_text(ie)));
+    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+  } catch (...) {
+    std::cerr << "Error parsing stub properties" << std::endl;
+    return TRUE;
+  }
+  std::complex<double> z_in = m_scm->add_stub_short(z, bl);
 
-  // process entry content
+  gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  append_history("add_stub_short_btn_cb");
+  finalize_add_component("Stub terminated in an short: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
+  
   return TRUE;
 }
 
@@ -135,8 +271,8 @@ SmithChartControl::init_ui(GtkBuilder *builder)
   CSIG(builder, "transmission-line-add-series-btn", C_CB_WRAPPER(add_tl_series_btn_cb));
   CSIG(builder, "lumped-component-add-series-btn", C_CB_WRAPPER(add_lumped_series_btn_cb));
   CSIG(builder, "lumped-component-add-parallel-btn", C_CB_WRAPPER(add_lumped_parallel_btn_cb));
-  CSIG(builder, "stub-add-series-btn", C_CB_WRAPPER(add_stub_open_btn_cb));
-  CSIG(builder, "stub-add-parallel-btn", C_CB_WRAPPER(add_stub_short_btn_cb));
+  CSIG(builder, "stub-add-open-btn", C_CB_WRAPPER(add_stub_open_btn_cb));
+  CSIG(builder, "stub-add-short-btn", C_CB_WRAPPER(add_stub_short_btn_cb));
   
   z_in_entry = GTK_WIDGET(gtk_builder_get_object(builder, "z-in-entry"));
   transmission_line_impedance_entry = GTK_WIDGET(gtk_builder_get_object(builder, "transmission-line-impedance-entry"));

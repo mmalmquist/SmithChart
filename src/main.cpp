@@ -26,7 +26,12 @@ init_ui()
     return false;
   }
 
-  scc = std::make_unique<SmithChartControl>(std::make_unique<SmithChartView>());
+  GtkWidget *sc = GTK_WIDGET(gtk_builder_get_object(builder, "smith-chart"));
+  std::shared_ptr<SmithChartModel> scm = std::make_shared<SmithChartModel>();
+  scc = std::make_unique<SmithChartControl>(scm,
+					    std::make_unique<SmithChartView>(scm,
+									     gtk_widget_get_allocated_width(sc),
+									     gtk_widget_get_allocated_height(sc)));
   scc->init_ui(builder);
 
   g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, "app-window")),

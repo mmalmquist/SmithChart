@@ -4,6 +4,10 @@
 #include <gtk/gtk.h>
 
 #include <vector>
+#include <complex>
+#include <memory>
+
+#include "SmithChartModel.hpp"
 
 struct MyPolygon {
   std::vector<double> x;
@@ -16,9 +20,17 @@ struct MyPolygon {
 class SmithChartView
 {
 public:
-  SmithChartView(int width=512,
-		 int height=512);
+  SmithChartView(std::shared_ptr<SmithChartModel> scm,
+		 int width,
+		 int height);
   ~SmithChartView();
+
+  void
+  add_reflection_coefficient(std::complex<double> gamma);
+  void
+  clear_history();
+  void
+  delete_last_history();
   
   void
   repaint();
@@ -29,7 +41,9 @@ public:
   gboolean
   configure_event_cb(GtkWidget *widget);
 private:
+  std::shared_ptr<SmithChartModel> m_scm;
   std::vector<MyPolygon> plots;
+  std::vector<MyPolygon> entries;
   
   cairo_surface_t *m_surface = NULL;
   GtkWidget *m_canvas = NULL;
@@ -53,6 +67,8 @@ private:
   draw_background();
   void
   draw_circles();
+  void
+  draw_entries();
 
   void
   create_imag_circle(double v_start,

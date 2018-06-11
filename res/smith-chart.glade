@@ -175,8 +175,8 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkDrawingArea" id="smith-chart">
-                <property name="width_request">512</property>
-                <property name="height_request">512</property>
+                <property name="width_request">768</property>
+                <property name="height_request">768</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
@@ -188,7 +188,7 @@
             </child>
             <child>
               <object class="GtkBox" id="box4">
-                <property name="width_request">384</property>
+                <property name="width_request">512</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
@@ -254,6 +254,7 @@
                           <object class="GtkEntry" id="z-in-entry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="editable">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -635,8 +636,8 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <object class="GtkButton" id="stub-add-series-btn">
-                                                <property name="label" translatable="yes">Series</property>
+                                              <object class="GtkButton" id="stub-add-open-btn">
+                                                <property name="label" translatable="yes">Open</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">True</property>
@@ -648,8 +649,8 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkButton" id="stub-add-parallel-btn">
-                                                <property name="label" translatable="yes">Parallel</property>
+                                              <object class="GtkButton" id="stub-add-short-btn">
+                                                <property name="label" translatable="yes">Short</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">True</property>
@@ -734,6 +735,7 @@
                                       <object class="GtkEntry" id="system-impedance-entry">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
+                                        <property name="editable">False</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -745,6 +747,7 @@
                                       <object class="GtkEntry" id="load-impedance-entry">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
+                                        <property name="editable">False</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>

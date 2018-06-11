@@ -6,24 +6,10 @@
 #include <iostream>
 #include <vector>
 
-static gboolean
-c_draw_cb(GtkWidget *widget,
-	  cairo_t *cr,
-	  gpointer data)
-{
-  (void)widget;
-  if (!data) { return FALSE; }
-  return ((SmithChartView *)data)->draw_cb(cr);
-}
-static gboolean
-c_configure_event_cb(GtkWidget *widget,
-		     GdkEventConfigure *event,
-		     gpointer data)
-{
-  (void)event;
-  if (!data) { return FALSE; }
-  return ((SmithChartView *)data)->configure_event_cb(widget);
-}
+#include "c_wrapper_macros.hpp"
+
+DECLARE_CAIRO_C_CALLBACK_WRAPPER(SmithChartView, draw_cb)
+DECLARE_C_CALLBACK_WRAPPER(SmithChartView, configure_event_cb)
 
 template<typename T>
 static std::vector<T> vec_mul(std::vector<T> lhs, T rhs)
@@ -35,9 +21,11 @@ static std::vector<T> vec_mul(std::vector<T> lhs, T rhs)
   return std::move(prod);
 }
 
-SmithChartView::SmithChartView(int width,
+SmithChartView::SmithChartView(std::shared_ptr<SmithChartModel> scm,
+			       int width,
 			       int height)
-  : m_width(width),
+  : m_scm(scm),
+    m_width(width),
     m_height(height)
 {
   create_circles();
@@ -50,6 +38,28 @@ SmithChartView::~SmithChartView()
 }
 
 void
+SmithChartView::add_reflection_coefficient(std::complex<double> gamma)
+{
+  int size = scale_factor();
+  entries.push_back({{gamma.real()*size}, {gamma.imag()*size}, 0, 0, 0});
+}
+
+void
+SmithChartView::clear_history()
+{
+  entries.clear();
+}
+
+void
+SmithChartView::delete_last_history()
+{
+  if (entries.size() > 0) {
+    entries.pop_back();
+  }
+}
+
+
+void
 SmithChartView::repaint()
 {
   gtk_widget_queue_draw(m_canvas);
@@ -60,8 +70,8 @@ SmithChartView::set_gtk_widget(GtkWidget *widget)
 {
   m_canvas = widget;
   
-  g_signal_connect(m_canvas, "draw", G_CALLBACK(c_draw_cb), this);
-  g_signal_connect(m_canvas, "configure-event", G_CALLBACK(c_configure_event_cb), this);
+  g_signal_connect(m_canvas, "draw", G_CALLBACK(C_CB_WRAPPER(draw_cb)), this);
+  g_signal_connect(m_canvas, "configure-event", G_CALLBACK(C_CB_WRAPPER(configure_event_cb)), this);
 }
 
 void
@@ -176,10 +186,27 @@ SmithChartView::draw_circles()
     int xc = x_center();
     int yc = y_center();
     for (size_t i = 0; i < len-1; ++i) {
-      cairo_move_to(m_cr, xc + poly.x[i], yc + poly.y[i]);
-      cairo_line_to(m_cr, xc + poly.x[i+1], yc + poly.y[i+1]);
+      cairo_move_to(m_cr, xc + poly.x[i], yc - poly.y[i]);
+      cairo_line_to(m_cr, xc + poly.x[i+1], yc - poly.y[i+1]);
     }
     cairo_stroke(m_cr);
+  }
+}
+
+void
+SmithChartView::draw_entries()
+{
+  cairo_set_line_width(m_cr, 0);
+  for (MyPolygon &poly : entries) {
+    cairo_set_source_rgb(m_cr, poly.red, poly.green, poly.blue);
+    cairo_arc(m_cr, x_center() + poly.x[0], y_center() - poly.y[0], 2.5, 0, 2*M_PI);
+    cairo_fill(m_cr);
+  }
+  if (entries.size() > 0) {
+    std::vector<MyPolygon>::iterator poly = entries.end() - 1;
+    cairo_set_source_rgb(m_cr, poly->red, poly->green, poly->blue);
+    cairo_arc(m_cr, x_center() + poly->x[0], y_center() - poly->y[0], 5.0, 0, 2*M_PI);
+    cairo_fill(m_cr);
   }
 }
 
@@ -188,6 +215,7 @@ SmithChartView::draw_cb(cairo_t *cr)
 {
   draw_background();
   draw_circles();
+  draw_entries();
 
   if (m_scale_required) {
     cairo_scale(cr, m_x_scale, m_y_scale);

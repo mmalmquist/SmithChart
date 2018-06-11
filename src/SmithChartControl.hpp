@@ -4,27 +4,40 @@
 #include <gtk/gtk.h>
 
 #include <memory>
+#include <string>
 
 #include "SmithChartView.hpp"
+#include "SmithChartModel.hpp"
 
 class SmithChartControl {
 public:
-  SmithChartControl(std::unique_ptr<SmithChartView> scv)
-    : m_scv(std::move(scv))
+  SmithChartControl(std::shared_ptr<SmithChartModel> scm,
+		    std::unique_ptr<SmithChartView> scv)
+    : m_scm(scm),
+      m_scv(std::move(scv))
   {
   }
+  void
+  finalize_add_component(std::string hist_entry);
+  gboolean
+  clear_all_btn_cb(GtkWidget *widget);
+  gboolean
+  clear_last_btn_cb(GtkWidget *widget);
 
-  gboolean clear_all_btn_cb();
-  gboolean clear_last_btn_cb();
-
-  gboolean add_tl_series_btn_cb();
-  gboolean add_lumped_series_btn_cb();
-  gboolean add_lumped_parallel_btn_cb();
-  gboolean add_stub_open_btn_cb();
-  gboolean add_stub_short_btn_cb();
+  gboolean
+  add_tl_series_btn_cb(GtkWidget *widget);
+  gboolean
+  add_lumped_series_btn_cb(GtkWidget *widget);
+  gboolean
+  add_lumped_parallel_btn_cb(GtkWidget *widget);
+  gboolean
+  add_stub_open_btn_cb(GtkWidget *widget);
+  gboolean
+  add_stub_short_btn_cb(GtkWidget *widget);
   
   void init_ui(GtkBuilder *builder);
 private:
+  std::shared_ptr<SmithChartModel> m_scm;
   std::unique_ptr<SmithChartView> m_scv;
   GtkWidget *z_in_entry;
   GtkWidget *transmission_line_impedance_entry;
