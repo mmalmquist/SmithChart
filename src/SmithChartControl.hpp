@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "SmithChartView.hpp"
 #include "SmithChartModel.hpp"
@@ -18,7 +19,8 @@ public:
   {
   }
   void
-  finalize_add_component(std::string hist_entry);
+  finalize_add_component(std::string hist_entry,
+			 std::vector<std::complex<double>> &z_arr);
   gboolean
   clear_all_btn_cb(GtkWidget *widget);
   gboolean

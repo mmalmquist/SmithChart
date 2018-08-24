@@ -26,7 +26,8 @@ public:
   ~SmithChartView();
 
   void
-  add_reflection_coefficient(std::complex<double> gamma);
+  add_reflection_coefficient(std::complex<double> gamma,
+			     std::vector<std::complex<double>> &gamma_arr);
   void
   clear_history();
   void
@@ -44,6 +45,7 @@ private:
   std::shared_ptr<SmithChartModel> m_scm;
   std::vector<MyPolygon> plots;
   std::vector<MyPolygon> entries;
+  std::vector<MyPolygon> centries;
   
   cairo_surface_t *m_surface = NULL;
   GtkWidget *m_canvas = NULL;
@@ -66,9 +68,12 @@ private:
   void
   draw_background();
   void
-  draw_circles();
+  draw_circles(std::vector<MyPolygon> const &polygon,
+	       double line_wdith);
   void
   draw_entries();
+  void
+  draw_entry(std::vector<MyPolygon> const &polygon);
 
   void
   create_imag_circle(double v_start,

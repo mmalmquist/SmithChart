@@ -6,6 +6,21 @@
 
 class SmithChartModel {
 public:
+
+  std::complex<double>
+  compute_tl_series(double impedance,
+		    double electrical_length) const;
+  std::complex<double>
+  compute_lumped_series(std::complex<double> impedance) const;
+  std::complex<double>
+  compute_lumped_parallel(std::complex<double> impedance) const;
+  std::complex<double>
+  compute_stub_open(double impedance,
+		    double electrical_length) const;
+  std::complex<double>
+  compute_stub_short(double impedance,
+		     double electrical_length) const;
+  
   std::complex<double>
   add_tl_series(double impedance,
 		double electrical_lengh);
@@ -32,7 +47,12 @@ public:
   inline std::complex<double>
   calculate_reflection_coefficient() const
   {
-    return (m_z_in - m_z_0) / (m_z_in + m_z_0);
+    return calculate_reflection_coefficient(m_z_in);
+  }
+  inline std::complex<double>
+  calculate_reflection_coefficient(std::complex<double> z_in) const
+  {
+    return (z_in - m_z_0) / (z_in + m_z_0);
   }
   inline std::complex<double> const *
   get_load_impedance() const

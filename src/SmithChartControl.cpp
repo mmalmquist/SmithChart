@@ -18,6 +18,13 @@ DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_lumped_parallel_btn_cb)
 DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_open_btn_cb)
 DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_short_btn_cb)
 
+template<typename T>
+static T mod(T v, T m) {
+  if (v > m) { v -= v/m; };
+  if (v < -m) { v += v/m; };
+  return v;
+}
+
 static std::complex<double>
 parse_complex(std::string const &str)
 {
@@ -91,7 +98,8 @@ complex_to_str(std::complex<double> const &c)
 }
 
 void
-SmithChartControl::finalize_add_component(std::string hist_entry)
+SmithChartControl::finalize_add_component(std::string hist_entry,
+					  std::vector<std::complex<double>> &z_arr)
 {
   append_history(hist_entry);
   std::complex<double> const *z_load = m_scm->get_load_impedance();
@@ -102,7 +110,10 @@ SmithChartControl::finalize_add_component(std::string hist_entry)
   if (z_system) {
     gtk_entry_set_text(GTK_ENTRY(system_impedance_entry), complex_to_str(*z_system).c_str());
   }
-  m_scv->add_reflection_coefficient(m_scm->calculate_reflection_coefficient());
+  for (std::vector<std::complex<double>>::iterator itr = z_arr.begin(); itr != z_arr.end(); ++itr) {
+    *itr = m_scm->calculate_reflection_coefficient(*itr);
+  }
+  m_scv->add_reflection_coefficient(m_scm->calculate_reflection_coefficient(), z_arr);
   m_scv->repaint();
 }
 
@@ -142,10 +153,16 @@ SmithChartControl::add_tl_series_btn_cb(GtkWidget *widget)
   double z, bl;
   try {
     z = parse_double(std::string(gtk_entry_get_text(ie)));
-    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+    bl = mod(parse_double_expr(std::string(gtk_entry_get_text(ele))), 2*M_PI);
   } catch (...) {
     std::cerr << "Error parsing transmission line properties" << std::endl;
     return TRUE;
+  }
+  std::vector<std::complex<double>> z_arr;
+  double ibl = 0, ebl = bl / 100.0;
+  for (int i = 0; i < 101; ++i) {
+    z_arr.push_back(m_scm->compute_tl_series(z, ibl));
+    ibl += ebl;
   }
   std::complex<double> z_in = m_scm->add_tl_series(z, bl);
 
@@ -153,7 +170,7 @@ SmithChartControl::add_tl_series_btn_cb(GtkWidget *widget)
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  finalize_add_component("Transmission Line in series: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
+  finalize_add_component("Transmission Line in series: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad", z_arr);
   
   return TRUE;
 }
@@ -171,12 +188,18 @@ SmithChartControl::add_lumped_series_btn_cb(GtkWidget *widget)
     std::cerr << "Error parsing lumped component properties" << std::endl;
     return TRUE;
   }
+  std::vector<std::complex<double>> z_arr;
+  std::complex<double> ic = 0, ec = c / 100.0;
+  for (int i = 0; i < 101; ++i) {
+    z_arr.push_back(m_scm->compute_lumped_series(c));
+    ic += ec;
+  }
   std::complex<double> z_in = m_scm->add_lumped_series(c);
 
   gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
-  finalize_add_component("Lumped component in series: Z = " + complex_to_str(c) + " ohm");
+  finalize_add_component("Lumped component in series: Z = " + complex_to_str(c) + " ohm", z_arr);
   
   return TRUE;
 }
@@ -194,12 +217,18 @@ SmithChartControl::add_lumped_parallel_btn_cb(GtkWidget *widget)
     std::cerr << "Error parsing lumped component properties" << std::endl;
     return TRUE;
   }
+  std::vector<std::complex<double>> z_arr;
+  std::complex<double> ic = 0, ec = c / 100.0;
+  for (int i = 0; i < 101; ++i) {
+    z_arr.push_back(m_scm->compute_lumped_parallel(c));
+    ic += ec;
+  }
   std::complex<double> z_in = m_scm->add_lumped_parallel(c);
 
   gtk_entry_set_text(GTK_ENTRY(z_in_entry), complex_to_str(z_in).c_str());
   
   gtk_entry_set_text(ie, "");
-  finalize_add_component("Lumped component in parallel: Z = " + complex_to_str(c) + " ohm");
+  finalize_add_component("Lumped component in parallel: Z = " + complex_to_str(c) + " ohm", z_arr);
   
   return TRUE;
 }
@@ -214,10 +243,16 @@ SmithChartControl::add_stub_open_btn_cb(GtkWidget *widget)
   double z, bl;
   try {
     z = parse_double(std::string(gtk_entry_get_text(ie)));
-    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+    bl = mod(parse_double_expr(std::string(gtk_entry_get_text(ele))), 2*M_PI);
   } catch (...) {
     std::cerr << "Error parsing stub properties" << std::endl;
     return TRUE;
+  }
+  std::vector<std::complex<double>> z_arr;
+  double ibl = 0, ebl = bl / 100.0;
+  for (int i = 0; i < 101; ++i) {
+    z_arr.push_back(m_scm->compute_stub_open(z, ibl));
+    ibl += ebl;
   }
   std::complex<double> z_in = m_scm->add_stub_open(z, bl);
 
@@ -225,7 +260,7 @@ SmithChartControl::add_stub_open_btn_cb(GtkWidget *widget)
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  finalize_add_component("Stub terminated in a open: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
+  finalize_add_component("Stub terminated in a open: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad", z_arr);
   
   return TRUE;
 }
@@ -240,10 +275,16 @@ SmithChartControl::add_stub_short_btn_cb(GtkWidget *widget)
   double z, bl;
   try {
     z = parse_double(std::string(gtk_entry_get_text(ie)));
-    bl = parse_double_expr(std::string(gtk_entry_get_text(ele)));
+    bl = mod(parse_double_expr(std::string(gtk_entry_get_text(ele))), 2*M_PI);
   } catch (...) {
     std::cerr << "Error parsing stub properties" << std::endl;
     return TRUE;
+  }
+  std::vector<std::complex<double>> z_arr;
+  double ibl = M_PI/2, ebl = (bl-M_PI/2) / 100.0;
+  for (int i = 0; i < 101; ++i) {
+    z_arr.push_back(m_scm->compute_stub_short(z, ibl));
+    ibl += ebl;
   }
   std::complex<double> z_in = m_scm->add_stub_short(z, bl);
 
@@ -251,7 +292,7 @@ SmithChartControl::add_stub_short_btn_cb(GtkWidget *widget)
   
   gtk_entry_set_text(ie, "");
   gtk_entry_set_text(ele, "");
-  finalize_add_component("Stub terminated in an short: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad");
+  finalize_add_component("Stub terminated in an short: Z_0 = " + complex_to_str(z) + " ohm, bl = " + complex_to_str(bl) + " rad", z_arr);
   
   return TRUE;
 }

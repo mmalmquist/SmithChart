@@ -38,16 +38,28 @@ SmithChartView::~SmithChartView()
 }
 
 void
-SmithChartView::add_reflection_coefficient(std::complex<double> gamma)
+SmithChartView::add_reflection_coefficient(std::complex<double> gamma,
+			     std::vector<std::complex<double>> &gamma_arr)
 {
   int size = scale_factor();
   entries.push_back({{gamma.real()*size}, {gamma.imag()*size}, 0, 0, 0});
+  MyPolygon mp;
+  mp.red = 0;
+  mp.green = 0;
+  mp.blue = 0;
+  std::vector<std::complex<double>>::const_iterator itr = gamma_arr.begin();
+  for (; itr != gamma_arr.end(); ++itr) {
+    mp.x.push_back(itr->real()*size);
+    mp.y.push_back(itr->imag()*size);
+  }
+  centries.push_back(std::move(mp));
 }
 
 void
 SmithChartView::clear_history()
 {
   entries.clear();
+  centries.clear();
 }
 
 void
@@ -55,6 +67,7 @@ SmithChartView::delete_last_history()
 {
   if (entries.size() > 0) {
     entries.pop_back();
+    centries.pop_back();
   }
 }
 
@@ -173,10 +186,11 @@ SmithChartView::draw_background()
 }
 
 void
-SmithChartView::draw_circles()
+SmithChartView::draw_circles(std::vector<MyPolygon> const &polygon,
+			     double line_wdith)
 {
-  cairo_set_line_width(m_cr, 0.5);
-  for (MyPolygon &poly : plots) {
+  cairo_set_line_width(m_cr, line_wdith);
+  for (MyPolygon const &poly : polygon) {
     cairo_set_source_rgb(m_cr, poly.red, poly.green, poly.blue);
     
     size_t len = std::min(poly.x.size(), poly.y.size());
@@ -196,14 +210,21 @@ SmithChartView::draw_circles()
 void
 SmithChartView::draw_entries()
 {
+  draw_entry(entries);
+  draw_circles(centries, 1.0);
+}
+
+void
+SmithChartView::draw_entry(std::vector<MyPolygon> const &polygon)
+{
   cairo_set_line_width(m_cr, 0);
-  for (MyPolygon &poly : entries) {
+  for (MyPolygon const &poly : polygon) {
     cairo_set_source_rgb(m_cr, poly.red, poly.green, poly.blue);
     cairo_arc(m_cr, x_center() + poly.x[0], y_center() - poly.y[0], 2.5, 0, 2*M_PI);
     cairo_fill(m_cr);
   }
-  if (entries.size() > 0) {
-    std::vector<MyPolygon>::iterator poly = entries.end() - 1;
+  if (polygon.size() > 0) {
+    std::vector<MyPolygon>::const_iterator poly = polygon.end() - 1;
     cairo_set_source_rgb(m_cr, poly->red, poly->green, poly->blue);
     cairo_arc(m_cr, x_center() + poly->x[0], y_center() - poly->y[0], 5.0, 0, 2*M_PI);
     cairo_fill(m_cr);
@@ -214,7 +235,7 @@ gboolean
 SmithChartView::draw_cb(cairo_t *cr)
 {
   draw_background();
-  draw_circles();
+  draw_circles(plots, 0.5);
   draw_entries();
 
   if (m_scale_required) {
