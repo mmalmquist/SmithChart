@@ -3,3 +3,8 @@
 **/*~
 local
 build
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+				
