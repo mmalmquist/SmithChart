@@ -8,8 +8,8 @@
 
 #include "c_wrapper_macros.hpp"
 
-DECLARE_CAIRO_C_CALLBACK_WRAPPER(SmithChartView, draw_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartView, configure_event_cb)
+CAIRO_CB_DEF(draw_cb, SmithChartView *)
+CONFIG_CB_DEF(configure_event_cb, SmithChartView *)
 
 template<typename T>
 static std::vector<T> vec_mul(std::vector<T> lhs, T rhs)
@@ -83,8 +83,8 @@ SmithChartView::set_gtk_widget(GtkWidget *widget)
 {
   m_canvas = widget;
   
-  g_signal_connect(m_canvas, "draw", G_CALLBACK(C_CB_WRAPPER(draw_cb)), this);
   g_signal_connect(m_canvas, "configure-event", G_CALLBACK(C_CB_WRAPPER(configure_event_cb)), this);
+  g_signal_connect(m_canvas, "draw", G_CALLBACK(C_CB_WRAPPER(draw_cb)), this);
 }
 
 void
@@ -234,6 +234,10 @@ SmithChartView::draw_entry(std::vector<MyPolygon> const &polygon)
 gboolean
 SmithChartView::draw_cb(cairo_t *cr)
 {
+  if (!m_surface && m_canvas && !configure_event_cb(m_canvas)) {
+    return FALSE;
+  }
+  
   draw_background();
   draw_circles(plots, 0.5);
   draw_entries();

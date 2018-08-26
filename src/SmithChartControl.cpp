@@ -9,14 +9,14 @@
 
 #include "c_wrapper_macros.hpp"
 
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, clear_all_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, clear_last_btn_cb)
+CLICK_CB_DEF(clear_all_btn_cb, SmithChartControl *)
+CLICK_CB_DEF(clear_last_btn_cb, SmithChartControl *)
 
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_tl_series_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_lumped_series_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_lumped_parallel_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_open_btn_cb)
-DECLARE_C_CALLBACK_WRAPPER(SmithChartControl, add_stub_short_btn_cb)
+CLICK_CB_DEF(add_tl_series_btn_cb, SmithChartControl *)
+CLICK_CB_DEF(add_lumped_series_btn_cb, SmithChartControl *)
+CLICK_CB_DEF(add_lumped_parallel_btn_cb, SmithChartControl *)
+CLICK_CB_DEF(add_stub_open_btn_cb, SmithChartControl *)
+CLICK_CB_DEF(add_stub_short_btn_cb, SmithChartControl *)
 
 template<typename T>
 static T mod(T v, T m) {
